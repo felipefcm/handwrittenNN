@@ -1,0 +1,8 @@
+{
+  "name": "digits-nn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Felipe Martins <ffcm@outlook.com>",
+  "license": "MIT",
+  "devDependencies": {}
+}
