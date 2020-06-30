@@ -34,6 +34,6 @@ const testMatrixLib = () => {
 
 // testMatrixLib();
 
-let nn = new NeuralNetwork(2, [ 20, 32, 20 ], 3);
-let output = nn.feedForward(Matrix.FromArray([ [0.3], [0.8] ]));
+let nn = new NeuralNetwork(3, [ 6, 12, 24, 36 ], 3);
+let output = nn.feedForward(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
 output.print();

@@ -45,6 +45,8 @@ class NeuralNetwork {
 	}
 
 	feedForward(input, layer = 0) {
+
+		if(layer > this.numHidden.length) return input;
 		
 		const layerWeights = this.weights[layer];
 		const layerBiases = this.biases[layer];
@@ -52,14 +54,15 @@ class NeuralNetwork {
 		const result = Matrix.Multiply(layerWeights, input).add(layerBiases);
 		result.apply(x => this.activation(x));
 
-		if(layer < this.numHidden.length)
-			return this.feedForward(result, layer + 1);
-		else
-			return result;
+		return this.feedForward(result, layer + 1);
 	}
 
 	activation(x) {
 		return 1 / (1 + Math.exp(-x)); //sigmoid
+	}
+
+	calculateError(output, target) {
+		
 	}
 }
 

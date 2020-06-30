@@ -34,12 +34,12 @@ class Matrix {
 
 	/**
 	 * Execute the function for every element and store the output
-	 * @param {function} fn A function receiving the element value
+	 * @param {function} fn A function receiving the element value and row,col
 	 */
 	apply(fn) {
 		for(let r = 0; r < this.rows; ++r)
 			for(let c = 0; c < this.cols; ++c)
-				this.matrix[r][c] = fn(this.matrix[r][c]);
+				this.matrix[r][c] = fn(this.matrix[r][c], r, c);
 	}
 
 	print() {
