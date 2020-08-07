@@ -15,6 +15,8 @@ class NeuralNetwork {
 	/** @type Matrix[] */
 	biases;
 
+	learningRate = 0.01;
+
 	/**
 	 * 
 	 * @param {number} numInputs Number of input neurons
@@ -36,12 +38,20 @@ class NeuralNetwork {
 			const numNeurons = numNeuronsPerLayer[layer];
 			const numNeuronsInPreviousLayer = numNeuronsPerLayer[layer - 1];
 
-			let layerWeights = Matrix.Random(numNeurons, numNeuronsInPreviousLayer, 0, 1);
-			let layerBiases = Matrix.Random(numNeurons, 1, 0, 1);
+			const layerWeights = Matrix.Random(numNeurons, numNeuronsInPreviousLayer, 0, 1);
+			const layerBiases = Matrix.Random(numNeurons, 1, -1, 1);
 			
 			this.weights.push(layerWeights);
 			this.biases.push(layerBiases);
 		}
+	}
+
+	train(sampleInput, desiredOutput) {
+
+		const output = this.feedForward(sampleInput);
+		const error = this.calculateError(output, desiredOutput);
+
+		this.backPropagate(error);
 	}
 
 	feedForward(input, layer = 0) {
@@ -61,8 +71,29 @@ class NeuralNetwork {
 		return 1 / (1 + Math.exp(-x)); //sigmoid
 	}
 
+	backPropagate(error) {
+
+		
+	}
+
 	calculateError(output, target) {
 		
+		let error = new Matrix(output.rows, 1);
+
+		for(let r = 0; r < error.rows; ++r)
+			error.matrix[r][0] = Math.pow(target.matrix[r][0] - output.matrix[r][0], 2);
+
+		return error;
+	}
+
+	calculateSampleError(error) {
+		
+		let e = 0;
+
+		for(let r = 0; r < error.rows; ++r)
+			e += error.matrix[r][0];
+
+		return e;
 	}
 }
 
