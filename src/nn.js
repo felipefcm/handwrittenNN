@@ -49,9 +49,11 @@ class NeuralNetwork {
 	train(sampleInput, desiredOutput) {
 
 		const output = this.feedForward(sampleInput);
-		const error = this.calculateError(output, desiredOutput);
+		const cost = this.calculateCost(output, desiredOutput);
 
-		this.backPropagate(error);
+
+
+		this.backPropagate(cost);
 	}
 
 	feedForward(input, layer = 0) {
@@ -68,32 +70,27 @@ class NeuralNetwork {
 	}
 
 	activation(x) {
-		return 1 / (1 + Math.exp(-x)); //sigmoid
+		return 1 / (1 + Math.exp(-x));
 	}
 
-	backPropagate(error) {
-
-		
+	activationDerivative(x) {
+		const activation = this.activation(x);
+		return activation * (1 - activation);
 	}
 
-	calculateError(output, target) {
-		
-		let error = new Matrix(output.rows, 1);
+	calculateCost(output, expected) {
 
-		for(let r = 0; r < error.rows; ++r)
-			error.matrix[r][0] = Math.pow(target.matrix[r][0] - output.matrix[r][0], 2);
+		let cost = 0;
 
-		return error;
+		for(let r = 0; r < output.rows; ++r) {
+			const diff = expected.matrix[r][0] - output.matrix[r][0];
+			cost += Math.pow(diff, 2);
+		}
+
+		return cost;
 	}
 
-	calculateSampleError(error) {
-		
-		let e = 0;
-
-		for(let r = 0; r < error.rows; ++r)
-			e += error.matrix[r][0];
-
-		return e;
+	backPropagate(error) {	
 	}
 }
 
