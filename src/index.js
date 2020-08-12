@@ -34,6 +34,21 @@ const testMatrixLib = () => {
 
 // testMatrixLib();
 
-let nn = new NeuralNetwork(3, [ 2, 2 ], 1);
+let nn = new NeuralNetwork(3, [ 2, 2 ], 3);
+
+const start = new Date();
 let output = nn.feedForward(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
+// let output = nn.feedForward(Matrix.Random(784, 1, 0, 1));
+console.log(`Feedforward took ${new Date() - start}ms`);
+console.log(`Initial output:`);
+output.print();
+
+const trainingStart = new Date();
+for(let i = 0; i < 10000; ++i) {
+	nn.train(Matrix.FromArray([ [0.3], [0.8], [0.1] ]), Matrix.FromArray([ [1.0], [0.0], [0.5] ]))
+}
+console.log(`Training took ${new Date() - trainingStart}ms`);
+
+output = nn.feedForward(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
+console.log(`Trained output:`);
 output.print();

@@ -16,30 +16,28 @@ class Matrix {
 			this.matrix[r] = new Array(cols).fill(0, 0, cols);
 	}
 
-	add(b) {
-		return Matrix.Add(this, b);
-	}
-
-	subtract(b) {
-		return Matrix.Subtract(this, b);
-	}
-
-	multiply(b) {
-		return Matrix.Multiply(this, b);
-	}
-
-	transpose() {
-		return Matrix.Transpose(this);
+	clone() {
+		
+		const clone = new Matrix(this.rows, this.cols);
+		
+		for(let r = 0; r < this.rows; ++r)
+			for(let c = 0; c < this.cols; ++c)
+				clone.matrix[r][c] = this.matrix[r][c];
+		
+		return clone;
 	}
 
 	/**
 	 * Execute the function for every element and store the output
-	 * @param {function} fn A function receiving the element value and row,col
+	 * @param {(val: number, row: number, col: number)=>Matrix} fn A function receiving the element value and row,col
 	 */
 	apply(fn) {
+		
 		for(let r = 0; r < this.rows; ++r)
 			for(let c = 0; c < this.cols; ++c)
 				this.matrix[r][c] = fn(this.matrix[r][c], r, c);
+
+		return this;
 	}
 
 	print() {
