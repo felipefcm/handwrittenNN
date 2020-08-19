@@ -21,7 +21,11 @@ class NeuralNetwork {
 	/** @type Matrix[] */
 	biases;
 
-	learningRate = 0.01;
+	/** @type Matrix[] */
+	errors;
+
+	/** @type number */
+	learningRate;
 
 	/**
 	 * 
@@ -29,12 +33,15 @@ class NeuralNetwork {
 	 * @param {number[]} numHidden Number of hidden layers and neurons. E.g. [3, 2, 3] for 3 hidden layers with 3, 2 and 3 neurons each
 	 * @param {number} numOutputs Number of output neurons
 	 */
-	constructor(numInputs, numHidden, numOutputs) {
+	constructor(numInputs, numHidden, numOutputs, learningRate = 0.01) {
 
 		this.inputs = [ null ];
 		this.activations = [];
 		this.weights = [ null ];
 		this.biases = [ null ];
+		this.errors = [ null ];
+
+		this.learningRate = learningRate;
 
 		this.numNeuronsPerLayer = [ numInputs, ...numHidden, numOutputs ];
 		this.numLayers = this.numNeuronsPerLayer.length;
@@ -44,8 +51,9 @@ class NeuralNetwork {
 			const numNeurons = this.numNeuronsPerLayer[layer];
 			const numNeuronsInPreviousLayer = this.numNeuronsPerLayer[layer - 1];
 
-			const layerWeights = Matrix.Random(numNeurons, numNeuronsInPreviousLayer, 0, 1);
-			const layerBiases = Matrix.Random(numNeurons, 1, -1, 1);
+			const layerWeights = Matrix.Random(numNeurons, numNeuronsInPreviousLayer, -1, 1);
+			layerWeights.apply(w => w * (1 / Math.sqrt(numNeuronsInPreviousLayer)));
+			const layerBiases = new Matrix(numNeurons, 1);
 			
 			this.weights.push(layerWeights);
 			this.biases.push(layerBiases);
@@ -90,6 +98,64 @@ class NeuralNetwork {
 		const error = this.calculateError(output, desiredOutput);
 
 		this.backPropagate(error, this.numLayers - 1);
+
+		for(let layer = 1; layer < this.numLayers; ++layer) {
+
+			const layerError = this.errors[layer];
+			const weights = this.weights[layer];
+			const biases = this.biases[layer];
+			const prevActivations = this.activations[layer - 1];
+			
+			for(let r = 0; r < weights.rows; ++r) {
+				
+				for(let c = 0; c < weights.cols; ++c)
+					weights.matrix[r][c] -= prevActivations.matrix[c][0] * layerError.matrix[r][0] * this.learningRate;
+				
+				biases.matrix[r][0] -= layerError.matrix[r][0] * this.learningRate;
+			}
+		}
+	}
+
+	trainMultiple(sampleInputs, desiredOutputs) {
+
+		const num = sampleInputs.length;
+
+		const accumWeightGradients = [ null ];
+		const accumBiasGradients = [ null ];
+
+		for(let layer = 1; layer < this.numLayers; ++layer) {
+			const numNeurons = this.numNeuronsPerLayer[layer];
+			const numNeuronsInPreviousLayer = this.numNeuronsPerLayer[layer - 1];
+			accumWeightGradients.push(new Matrix(numNeurons, numNeuronsInPreviousLayer));
+			accumBiasGradients.push(new Matrix(numNeurons, 1));
+		}
+
+		for(let [i, sampleInput] of sampleInputs.entries()) {
+			
+			const output = this.feedForward(sampleInput);
+			const error = this.calculateError(output, desiredOutputs[i]);
+
+			this.backPropagate(error, this.numLayers - 1);
+
+			for(let layer = this.numLayers - 1; layer >= 1; --layer) {
+				
+				const weightGradient = Matrix.Multiply(this.errors[layer], Matrix.Transpose(this.activations[layer - 1]));
+				weightGradient.apply(e => e / num);
+				accumWeightGradients[layer] = Matrix.Add(accumWeightGradients[layer], weightGradient);
+
+				const biasGradient = this.errors[layer].clone().apply(e => e / num);
+				accumBiasGradients[layer] = Matrix.Add(accumBiasGradients[layer], biasGradient);
+			}
+		}
+
+		for(let layer = this.numLayers - 1; layer >= 1; --layer) {
+			
+			const layerAccWeightGradients = accumWeightGradients[layer].apply(e => e * this.learningRate);
+			const layerAccBiasGradients = accumBiasGradients[layer].apply(e => e * this.learningRate);
+
+			this.weights[layer] = Matrix.Subtract(this.weights[layer], layerAccWeightGradients);
+			this.biases[layer] = Matrix.Subtract(this.biases[layer], layerAccBiasGradients);
+		}
 	}
 
 	calculateError(output, desiredOutput) {
@@ -124,19 +190,8 @@ class NeuralNetwork {
 				layerError.matrix[r][0] *= this.activationDerivative(inputs.matrix[r][0]);
 		}
 
+		this.errors[layer] = layerError;
 		this.backPropagate(layerError, layer - 1);
-
-		const weights = this.weights[layer];
-		const biases = this.biases[layer];
-		const prevActivations = this.activations[layer - 1];
-		
-		for(let r = 0; r < weights.rows; ++r) {
-			
-			for(let c = 0; c < weights.cols; ++c)
-				weights.matrix[r][c] -= prevActivations.matrix[c][0] * layerError.matrix[r][0] * this.learningRate;
-			
-			biases.matrix[r][0] -= layerError.matrix[r][0] * this.learningRate;
-		}
 	}
 }
 

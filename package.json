@@ -2,7 +2,11 @@
   "name": "digits-nn",
   "version": "1.0.0",
   "main": "index.js",
-  "author": "Felipe Martins <ffcm@outlook.com>",
+  "author": "felipefcm",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {},
+  "dependencies": {
+    "fs-extra": "^9.0.1",
+    "image-output": "^2.4.2"
+  }
 }

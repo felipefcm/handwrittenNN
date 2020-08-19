@@ -60,7 +60,7 @@ class Matrix {
 		
 		for(let r = 0; r < rows; ++r)
 			for(let c = 0; c < cols; ++c)
-				rand.matrix[r][c] = min + Math.random() * max;
+				rand.matrix[r][c] = min + Math.random() * (max - min);
 		
 		return rand;
 	}
@@ -122,9 +122,9 @@ class Matrix {
 
 		let mult = new Matrix(a.rows, b.cols);
 
-		for(let r = 0; r < a.rows; ++r)
-			for(let c = 0; c < b.cols; ++c)
-				for(let ri = 0; ri < b.cols; ++ri)
+		for(let r = 0; r < mult.rows; ++r)
+			for(let c = 0; c < mult.cols; ++c)
+				for(let ri = 0; ri < a.cols; ++ri)
 					mult.matrix[r][c] += a.matrix[r][ri] * b.matrix[ri][c];
 
 		return mult;
