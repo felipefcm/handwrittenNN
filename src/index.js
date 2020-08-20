@@ -39,7 +39,7 @@ const testMatrixLib = () => {
 
 const testNNCode = () => {
 
-	let testNN = new NeuralNetwork(3, [ 2, 2 ], 3);
+	let testNN = new NeuralNetwork(3, [ 3, 2 ], 3, 0.025);
 
 	const start = new Date();
 	let output = testNN.feedForward(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
@@ -58,9 +58,24 @@ const testNNCode = () => {
 	output.print();
 };
 
+const feedForwardTest = () => {
+
+	const num = 100000;
+	let testNN = new NeuralNetwork(256, [ 16, 16 ], 10);
+
+	const input = Matrix.Random(256, 1, 0, 1);
+
+	const start = new Date();
+	
+	for(let n = 0; n < num; ++n)
+		testNN.feedForward(input);
+
+	console.log(`Feedforward took ${new Date() - start}ms`);
+};
+
 const testNNCodeBatch = () => {
 
-	let testNN = new NeuralNetwork(3, [ 2, 2 ], 3, 0.05);
+	let testNN = new NeuralNetwork(3, [ 3, 2 ], 3, 0.05);
 
 	const start = new Date();
 	let output = testNN.feedForward(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
@@ -68,22 +83,21 @@ const testNNCodeBatch = () => {
 	console.log(`Initial output:`);
 	output.print();
 
-	const samples = 30000;
-	const batchSize = 100;
+	const samples = 10000;
+	const batchSize = 10;
 	
-	const trainingStart = new Date();
-	for(let batch = 0; batch < samples / batchSize; ++batch) {
+	const examples = [];
+	const outputs = [];
 
-		const examples = [];
-		const outputs = [];
-
-		for(let i = 0; i < batchSize; ++i) {
-			examples.push(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
-			outputs.push(Matrix.FromArray([ [1.0], [0.0], [0.5] ]));
-		}
-
-		testNN.trainMultiple(examples, outputs);
+	for(let i = 0; i < batchSize; ++i) {
+		examples.push(Matrix.FromArray([ [0.3], [0.8], [0.1] ]));
+		outputs.push(Matrix.FromArray([ [1.0], [0.0], [0.5] ]));
 	}
+
+	const trainingStart = new Date();
+
+	for(let batch = 0; batch < samples / batchSize; ++batch)
+		testNN.trainMultiple(examples, outputs);
 
 	console.log(`Training took ${new Date() - trainingStart}ms`);
 
@@ -126,7 +140,7 @@ const imageToMatrix = (image) => {
 	const matrix = new Matrix(784, 1);
 
 	for(let r = 0; r < 784; ++r)
-		matrix.matrix[r][0] = Math.max(image[r] / 255, 0.2);
+		matrix.matrix[r][0] = image[r] / 255;
 
 	return matrix;
 };
@@ -171,12 +185,12 @@ const testNN = async () => {
 	// 	height: 28
 	// }, 'digit.png');
 	
-	const nn = new NeuralNetwork(784, [16, 16], 10, 0.04);
+	const nn = new NeuralNetwork(784, [32, 16], 10, 0.01);
 
 	const numTrainingRounds = 1;
 
 	const trainingStart = new Date();
-	for(let i = 0; i < numTrainingRounds; ++i) {
+	for(let round = 0; round < numTrainingRounds; ++round) {
 		for(let [i, image] of images.entries()) {
 			
 			const imageInput = imageToMatrix(image);
@@ -186,7 +200,7 @@ const testNN = async () => {
 			nn.train(imageInput, expected);
 		}
 	}
-	console.log(`Training took ${new Date() - trainingStart}ms - ${numTrainingRounds} rounds`);
+	console.log(`Training took ${new Date() - trainingStart}ms - ${numTrainingRounds} round(s)`);
 
 	let correct = 0;
 	for(let [i, image] of images.entries()) {
@@ -214,14 +228,14 @@ const testNNBatch = async () => {
 	const labelsBuffer = await fs.readFile('./train-labels-idx1-ubyte');
 	const labels = await MNIST.loadTrainingLabels(labelsBuffer);
 	
-	const nn = new NeuralNetwork(784, [16, 16], 10, 0.02);
+	const nn = new NeuralNetwork(784, [16, 16], 10, 0.04);
 
 	const numTrainingRounds = 1;
 
 	const trainingStart = new Date();
 	for(let i = 0; i < numTrainingRounds; ++i) {
 
-		const batchSize = 200;
+		const batchSize = 50;
 		for(let batch = 0; batch < images.length / batchSize; ++batch) {
 
 			const batchImages = images.slice(batch * batchSize, (batch + 1) * batchSize).map(i => imageToMatrix(i));
@@ -230,7 +244,7 @@ const testNNBatch = async () => {
 			nn.trainMultiple(batchImages, batchLabels);
 		}
 	}
-	console.log(`Training took ${new Date() - trainingStart}ms - ${numTrainingRounds} rounds`);
+	console.log(`Training took ${new Date() - trainingStart}ms - ${numTrainingRounds} round(s)`);
 
 	let correct = 0;
 	for(let [i, image] of images.entries()) {
@@ -251,6 +265,7 @@ const testNNBatch = async () => {
 };
 
 // testMatrixLib();
+// feedForwardTest();
 // testNNCode();
 // testNNCodeBatch();
 // testMNIST();

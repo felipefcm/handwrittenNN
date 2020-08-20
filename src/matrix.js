@@ -5,7 +5,7 @@ class Matrix {
 	rows;
 	cols;
 
-	constructor(rows, cols) {
+	constructor(rows, cols, initialValue = 0) {
 		
 		this.rows = rows;
 		this.cols = cols;
@@ -13,7 +13,7 @@ class Matrix {
 		this.matrix = [];
 		
 		for(let r = 0; r < rows; ++r)
-			this.matrix[r] = new Array(cols).fill(0, 0, cols);
+			this.matrix[r] = new Array(cols).fill(initialValue, 0, cols);
 	}
 
 	clone() {
@@ -25,6 +25,39 @@ class Matrix {
 				clone.matrix[r][c] = this.matrix[r][c];
 		
 		return clone;
+	}
+
+	add(b) {
+		
+		if(this.rows !== b.rows || this.cols !== b.cols)
+			throw new Error('Add error: dimensions mismatch');
+
+		for(let r = 0; r < this.rows; ++r)
+			for(let c = 0; c < this.cols; ++c)
+				this.matrix[r][c] += b.matrix[r][c];
+
+		return this;
+	}
+
+	subtract(b) {
+
+		if(this.rows !== b.rows || this.cols !== b.cols)
+			throw new Error('Subtract error: dimensions mismatch');
+
+		for(let r = 0; r < this.rows; ++r)
+			for(let c = 0; c < this.cols; ++c)
+				this.matrix[r][c] -= b.matrix[r][c];
+
+		return this;
+	}
+
+	multiplyScalar(s) {
+		
+		for(let r = 0; r < this.rows; ++r)
+			for(let c = 0; c < this.cols; ++c)
+				this.matrix[r][c] *= s;
+
+		return this;
 	}
 
 	/**

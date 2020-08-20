@@ -52,8 +52,10 @@ class NeuralNetwork {
 			const numNeuronsInPreviousLayer = this.numNeuronsPerLayer[layer - 1];
 
 			const layerWeights = Matrix.Random(numNeurons, numNeuronsInPreviousLayer, -1, 1);
-			layerWeights.apply(w => w * (1 / Math.sqrt(numNeuronsInPreviousLayer)));
-			const layerBiases = new Matrix(numNeurons, 1);
+			// layerWeights.multiplyScalar(1 / Math.sqrt(numNeuronsInPreviousLayer)); //for sigmoid
+			layerWeights.multiplyScalar(Math.sqrt(2 / numNeuronsInPreviousLayer)); //for ReLU
+
+			const layerBiases = new Matrix(numNeurons, 1, 1);
 			
 			this.weights.push(layerWeights);
 			this.biases.push(layerBiases);
@@ -73,7 +75,7 @@ class NeuralNetwork {
 			const layerWeights = this.weights[layer];
 			const layerBiases = this.biases[layer];
 	
-			const layerInput = Matrix.Add(Matrix.Multiply(layerWeights, activations), layerBiases);
+			const layerInput = Matrix.Multiply(layerWeights, activations).add(layerBiases);
 			this.inputs[layer] = layerInput;
 	
 			layerActivations = layerInput.clone().apply(x => this.activation(x));
@@ -84,12 +86,18 @@ class NeuralNetwork {
 	}
 
 	activation(x) {
-		return 1 / (1 + Math.exp(-x));
+		// return 1 / (1 + Math.exp(-x)); //sigmoid
+		return Math.max(0, x); //ReLU
 	}
 
 	activationDerivative(x) {
-		const activation = this.activation(x);
-		return activation * (1 - activation);
+		
+		//sigmoid
+		// const activation = this.activation(x);
+		// return activation * (1 - activation);
+
+		//ReLU
+		return x > 0 ? 1 : 0;
 	}
 
 	train(sampleInput, desiredOutput) {
@@ -140,21 +148,21 @@ class NeuralNetwork {
 			for(let layer = this.numLayers - 1; layer >= 1; --layer) {
 				
 				const weightGradient = Matrix.Multiply(this.errors[layer], Matrix.Transpose(this.activations[layer - 1]));
-				weightGradient.apply(e => e / num);
-				accumWeightGradients[layer] = Matrix.Add(accumWeightGradients[layer], weightGradient);
+				weightGradient.multiplyScalar(this.learningRate / num);
+				accumWeightGradients[layer].add(weightGradient);
 
-				const biasGradient = this.errors[layer].clone().apply(e => e / num);
-				accumBiasGradients[layer] = Matrix.Add(accumBiasGradients[layer], biasGradient);
+				const biasGradient = this.errors[layer].clone().multiplyScalar(this.learningRate / num);
+				accumBiasGradients[layer].add(biasGradient);
 			}
 		}
 
 		for(let layer = this.numLayers - 1; layer >= 1; --layer) {
 			
-			const layerAccWeightGradients = accumWeightGradients[layer].apply(e => e * this.learningRate);
-			const layerAccBiasGradients = accumBiasGradients[layer].apply(e => e * this.learningRate);
+			const layerAccWeightGradients = accumWeightGradients[layer];//.multiplyScalar(this.learningRate);
+			const layerAccBiasGradients = accumBiasGradients[layer];//.multiplyScalar(this.learningRate);
 
-			this.weights[layer] = Matrix.Subtract(this.weights[layer], layerAccWeightGradients);
-			this.biases[layer] = Matrix.Subtract(this.biases[layer], layerAccBiasGradients);
+			this.weights[layer].subtract(layerAccWeightGradients);
+			this.biases[layer].subtract(layerAccBiasGradients);
 		}
 	}
 
@@ -192,6 +200,18 @@ class NeuralNetwork {
 
 		this.errors[layer] = layerError;
 		this.backPropagate(layerError, layer - 1);
+	}
+
+	normalize(input) {
+
+		let max = 0;
+		for(let r = 0; r < input.rows; ++r)
+			max = Math.max(max, input.matrix[r][0]);
+
+		for(let r = 0; r < input.rows; ++r)
+			input.matrix[r][0] /= max;
+
+		return input;
 	}
 }
 
